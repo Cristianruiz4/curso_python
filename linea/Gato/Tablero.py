@@ -53,7 +53,30 @@ def juego(simbolos:dict):
         ['1','5','9'],
         ['3','5','7']
     ]
-
+    en_juego = True
+    ganador=""
+    movimientos = 0
+    dibuja_tablero(simbolos)
+    while en_juego:
+        if movimientos < 9:
+            usuario(simbolos)
+            dibuja_tablero(simbolos)
+            movimientos += 1
+            gana = checa_winner(simbolos,lista_combinaciones)
+            if gana is True:
+                en_juego = False
+                ganador= "Usuario"
+            ia(simbolos)
+            dibuja_tablero(simbolos)
+            gana = checa_winner(simbolos,lista_combinaciones)
+            if gana is True:
+                en_juego = False
+                ganador = 'Maquina'
+            if movimientos >= 9:
+                en_juego = False
+        else:
+            en_juego = False
+    
 def checa_winner(simbolos:dict, combinaciones:list):
     '''Checa si hay ganador'''
     for c in combinaciones:
@@ -64,12 +87,13 @@ def checa_winner(simbolos:dict, combinaciones:list):
 if __name__ == '__main__':
     numeros = [str(x) for x in range(1, 10)]
     simbolos = {x:x for x in numeros}
+    juego(simbolos)
+    '''
     dibuja_tablero(simbolos)
     ia(simbolos)
     dibuja_tablero(simbolos)
     usuario(simbolos)
     dibuja_tablero(simbolos)
-    '''
     X = random.choice(numeros)
     numeros.remove(X)
     simbolos[X] = 'X'
