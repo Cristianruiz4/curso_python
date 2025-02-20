@@ -1,0 +1,6 @@
+Sport('Football', 11, 'NFL')
+Sport('Baseball', 9, 'LMP')
+Sport('Baseball', 9, 'MLB')
+Sport('Soccer', 11, 'Liga MX')
+Sport('Basketball', 5, 'NBA')
+Sport('Soccer', 11, 'FIFA')
