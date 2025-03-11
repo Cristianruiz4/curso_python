@@ -6,6 +6,7 @@
     <title>Libros Web - Búsqueda por título</title>
 </head>
 <body>
+
     <h1>Libros Web</h1>
     <h2>Búsqueda por título</h2>
     <p>Busca una o más palabras en el título</p>
@@ -16,7 +17,7 @@
     </form>
     <ul>
         {% for libro in lista_libros %}
-            <li>{{ libro.title }} - {{ libro.author }}</li>
+            <li><a href="/libro/{{libro.id}}">{{ libro.title }} - {{ libro.author }}</li></a>
         {% endfor %}
     </ul>
     <ul>
