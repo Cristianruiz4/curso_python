@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letra</title>
+</head>
+<body>
+    <h1>Libros Web</h1>
+    <p>Seleccionala letra a mostrar</p>
+    <div>
+        {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
+        <a href="/letra/{{ letter }}">{{ letter }}</a>
+        {% if not loop.last %} | {% endif %}
+        {% endfor %}
+    </div>
+    <div>
+        <ul>
+            {% for libro in lista_libros %}
+                <li><a href="/libro/{{libro.id}}">{{ libro.title }} - {{ libro.author }}</li></a>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>l
