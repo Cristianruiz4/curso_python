@@ -1,113 +1,115 @@
-''' Clases para manejar la base de datos de películas '''
+''' Clases del sistema de películas, actores y actrices'''
 import csv
-import os
-import hashlib
+from hashlib import sha256
 from datetime import datetime
 
 class Actor:
-    ''' Clase para manejar la información de un actor '''
-    def __init__(self, id_estrella, nombre, fecha_nacimiento, ciudad_nacimiento, url_imagen, username):
+    ''' Clase Actor'''
+    def __init__(self,id_estrella,nombre,fecha_nacimiento,ciudad_nacimiento,url_imagen,username):
         self.id_estrella       = int(id_estrella)
         self.nombre            = nombre
-        self.fecha_nacimiento  = fecha_nacimiento
+        self.fecha_nacimiento  = datetime.strptime(fecha_nacimiento, '%Y-%m-%d')
         self.ciudad_nacimiento = ciudad_nacimiento
         self.url_imagen        = url_imagen
         self.username          = username
     
     def to_dict(self):
-        ''' Devuelve un diccionario con la información del actor '''
+        ''' Retorna un diccionario con los atributos del objeto'''
         return {
             'id_estrella': self.id_estrella,
             'nombre': self.nombre,
-            'fecha_nacimiento': self.fecha_nacimiento,
+            'fecha_nacimiento': self.fecha_nacimiento.strftime('%Y-%m-%d'),
             'ciudad_nacimiento': self.ciudad_nacimiento,
             'url_imagen': self.url_imagen,
             'username': self.username
-        }   
-
+        }
+    def __str__(self):
+        ''' Método para imprimir el objeto Actor'''
+        return self.nombre
+    
 class Pelicula:
-    ''' Clase para manejar la información de una película '''
-    def __init__(self, id_pelicula, titulo_pelicula, fecha_lanzamiento, url_poster):
-        ''' Inicializa la clase con los datos de la película '''
+    ''' Clase Película'''
+    def __init__(self, id_pelicula,titulo_pelicula,fecha_lanzamiento,url_poster):
+        ''' Constructor de la clase Película'''
         self.id_pelicula       = int(id_pelicula)
         self.titulo_pelicula   = titulo_pelicula
-        self.fecha_lanzamiento = datetime.strptime(fecha_lanzamiento, "%Y-%m-%d").date()
+        self.fecha_lanzamiento = datetime.strptime(fecha_lanzamiento, '%Y-%m-%d')
         self.url_poster        = url_poster
+    
     def to_dict(self):
-        ''' Devuelve un diccionario con la información de la película '''
+        ''' Retorna un diccionario con los atributos del objeto Película'''
         return {
             'id_pelicula': self.id_pelicula,
             'titulo_pelicula': self.titulo_pelicula,
-            'fecha_lanzamiento': self.fecha_lanzamiento.strftime("%Y-%m-%d"),
+            'fecha_lanzamiento': self.fecha_lanzamiento.strftime('%Y-%m-%d'),
             'url_poster': self.url_poster
         }
     def __str__(self):
-        ''' Devuelve una representación en string de la película '''
-        return f"{self.titulo_pelicula} ({self.fecha_lanzamiento.year})"
-
+        ''' Método para imprimir el objeto Película'''
+        return f'{self.titulo_pelicula} ({self.fecha_lanzamiento.year})'
+    
 class Relacion:
-    ''' Clase para manejar la relación entre actores y películas '''
-    def __init__(self, id_relacion, id_estrella, id_pelicula,personaje):
-        ''' Inicializa la clase con los datos de la relación '''
+    ''' Clase Relación: Relación entre actores y películas'''
+    def __init__(self,id_relacion,id_pelicula,id_estrella, personaje):
+        ''' Constructor de la clase Relación'''
         self.id_relacion = int(id_relacion)
+        self.id_pelicula = int(id_pelicula)  
         self.id_estrella = int(id_estrella)
-        self.id_pelicula = int(id_pelicula)
         self.personaje   = personaje
-
+    
     def to_dict(self):
-        ''' Devuelve un diccionario con la información de la relación '''
+        ''' Retorna un diccionario con los atributos del objeto Relación'''
         return {
             'id_relacion': self.id_relacion,
-            'id_estrella': self.id_estrella,
             'id_pelicula': self.id_pelicula,
+            'id_estrella': self.id_estrella,
             'personaje'  : self.personaje
         }
 
 class User:
-    ''' Clase para manejar la información de un usuario '''
-    def __init__(self, username, nombre_completo, email, password):
-        ''' Inicializa la clase con los datos del usuario '''
-        self.username        = username
+    ''' Clase User: Usuario del sistema'''
+    def __init__(self,username,nombre_completo,email,password):
+        ''' Constructor de la clase User'''
+        self.username = username
         self.nombre_completo = nombre_completo
-        self.email           = email
-        self.password        = password
-
+        self.email = email
+        self.password = password
+    
+    def hash_password(self,password):
+        ''' Método para encriptar la contraseña'''
+        return sha256(password.encode()).hexdigest()
+    
     def to_dict(self):
-        ''' Devuelve un diccionario con la información del usuario '''
+        ''' Retorna un diccionario con los atributos del objeto User'''
         return {
             'username': self.username,
             'nombre_completo': self.nombre_completo,
             'email': self.email,
             'password': self.password
         }
-
-    def hash_string(self, string):
-        ''' Devuelve el hash de un string '''
-        return hashlib.sha256(string.encode()).hexdigest()
-
+    
 class SistemaCine:
-    ''' Clase para manejar la base de datos de películas '''
+    ''' Clase SistemaCine: Sistema de películas'''
     def __init__(self):
-        ''' Inicializa la clase con los datos de la base de datos '''
+        ''' Constructor de la clase SistemaCine'''
         self.actores = {}
         self.peliculas = {}
         self.relaciones = {}
         self.usuarios = {}
+        self.usuario_actual = None
         self.idx_actor = 0
         self.idx_pelicula = 0
         self.idx_relacion = 0
-        self.usuario_actual = None
-
+    
     def cargar_csv(self, archivo, clase):
-        ''' Carga los datos de un archivo CSV en la base de datos'''
-        with open(archivo, encoding='utf-8') as f:
-            reader = csv.DictReader(f)
+        ''' Método para cargar datos desde un archivo CSV'''
+        with open(archivo, mode='r', encoding='utf8') as file:
+            reader = csv.DictReader(file)
             for row in reader:
                 if clase == Actor:
                     actor = Actor(**row)
                     self.actores[actor.id_estrella] = actor
                 elif clase == Pelicula:
-                    print(row)
                     pelicula = Pelicula(**row)
                     self.peliculas[pelicula.id_pelicula] = pelicula
                 elif clase == Relacion:
@@ -133,30 +135,28 @@ class SistemaCine:
                 writer.writerow(obj.to_dict())
 
     def obtener_peliculas_por_actor(self, id_estrella):
-        ''' Devuelve una lista de películas en las que ha participado un actor '''
-        ids_peliculas = [rel.id_pelicula for rel in self.relaciones.values() if rel.id_estrella == id_estrella]
-        return [self.peliculas[id_pelicula] for id_pelicula in ids_peliculas]
-    
+        ''' Método para obtener las películas de un actor'''
+        ids_peliculas = [relacion.id_pelicula for relacion in self.relaciones.values() if relacion.id_estrella == id_estrella]
+        return [self.peliculas[id_pelicula] for id_pelicula in ids_peliculas] 
+
     def obtener_actores_por_pelicula(self, id_pelicula):
-        ''' Devuelve una lista de actores que han participado en una película '''
-        ids_actores = [rel.id_estrella for rel in self.relaciones.values() if rel.id_pelicula == id_pelicula]
+        ''' Método para obtener los actores de una película'''
+        ids_actores = [relacion.id_estrella for relacion in self.relaciones.values() if relacion.id_pelicula == id_pelicula]
         return [self.actores[id_estrella] for id_estrella in ids_actores]
 
     def login(self, username, password):
-        ''' Inicia sesión en el sistema '''
-        if username in self.usuarios:
-            user = self.usuarios[username]
-            if user.hash_string(password) == user.password:
-                self.usuario_actual = user
-                return True
+        user = self.usuarios.get(username)
+        if user and user.password == user.hash_password(password):
+            self.usuario_actual = user
+            return True
         return False
-    
-    def agregar_actor(self,nombre,fecha_nacimiento,ciudad_nacimiento,url_imagen):
-        ''' Agrega un actor a la base de datos '''
-        if self.usuario_actual is not None:
-            self.idx_actor += 1
-            actor = Actor(self.idx_actor,nombre,fecha_nacimiento,ciudad_nacimiento,url_imagen,self.usuario_actual.username)
-            self.actores[self.idx_actor] = actor
+
+    def agregar_actor(self, nombre, fecha_nacimiento, ciudad_nacimiento, url_imagen):
+        if self.usuario_actual:
+            new_id = self.idx_actor + 1
+            self.idx_actor = new_id
+            actor = Actor(new_id, nombre, fecha_nacimiento, ciudad_nacimiento, url_imagen, self.usuario_actual.username)
+            self.actores[actor.id_estrella] = actor
 
     def agregar_pelicula(self, titulo_pelicula, fecha_lanzamiento, url_poster):
         if self.usuario_actual:
@@ -164,61 +164,96 @@ class SistemaCine:
             self.idx_pelicula = new_id
             pelicula = Pelicula(new_id, titulo_pelicula, fecha_lanzamiento, url_poster)
             self.peliculas[pelicula.id_pelicula] = pelicula
-
+    
     def agregar_relacion(self, id_pelicula, id_estrella,personaje):
         if self.usuario_actual:
             new_id = self.idx_relacion + 1
             self.idx_relacion = new_id
             relacion = Relacion(new_id, id_pelicula, id_estrella,personaje)
             self.relaciones[relacion.id_relacion] = relacion
-
+    
     def agregar_usuario(self, username, nombre_completo, email, password):
         if self.usuario_actual:
-            user = User(username, nombre_completo, email, password)
-            self.usuarios[user.username] = user
-
+            if username not in self.usuarios:
+                user = User(username, nombre_completo, email, password)
+                user.password = user.hash_password(user.password)
+                self.usuarios[user.username] = user
+    def buscar_peliculas_por_titulo(self, titulo_parcial):
+        return [pelicula for pelicula in self.peliculas.values() if titulo_parcial.lower() in pelicula.titulo_pelicula.lower()]
+    
+    def buscar_actores_por_nombre(self, nombre_parcial):
+        return [actor for actor in self.actores.values() if nombre_parcial.lower() in actor.nombre.lower()]
+    
+    def obtener_personajes_por_estrella(self, id_estrella):
+        personajes = []
+        for rel in self.relaciones.values():
+            if rel.id_estrella == id_estrella:
+                pelicula = self.peliculas.get(rel.id_pelicula)
+                if pelicula:
+                    personajes.append({"personaje": rel.personaje, "pelicula": pelicula})
+        return personajes
+    
+    def obtener_personajes_por_pelicula(self, id_pelicula):
+        ''' Método para obtener los personajes de una película'''
+        actores = []
+        for rel in self.relaciones.values():
+            if rel.id_pelicula == id_pelicula:
+                actor = self.actores.get(rel.id_estrella)
+                if actor:
+                    actores.append({"personaje": rel.personaje,"actor":actor})
+        return actores
+    
 if __name__ == '__main__':
-    #archivo = "datos/actores.csv"
-    archivo_actores    = "datos/movies_db - actores.csv"
-    archivo_peliculas  = "datos/movies_db - peliculas.csv"
-    archivo_relaciones = "datos/movies_db - relacion.csv"
-    archivo_usuarios   = "datos/movies_db - users_hashed.csv"
     sistema = SistemaCine()
+    archivo_actores = 'datos/movies_db - actores.csv'
+    archivo_peliculas = 'datos/movies_db - peliculas.csv'
+    archivo_relaciones = 'datos/movies_db - relacion.csv'
+    archivo_usuarios = 'datos/movies_db - users_hashed.csv'
     sistema.cargar_csv(archivo_actores, Actor)
     sistema.cargar_csv(archivo_peliculas, Pelicula)
-    sistema.cargar_csv(archivo_relaciones, Relacion)    
+    sistema.cargar_csv(archivo_relaciones, Relacion)
     sistema.cargar_csv(archivo_usuarios, User)
-    actores = sistema.actores
-    for id_estrella, actor in actores.items():
-        print(f"{id_estrella}: {actor.nombre:35s} - {actor.fecha_nacimiento}")
     lista_peliculas = sistema.obtener_peliculas_por_actor(1)
     for pelicula in lista_peliculas:
-        print(pelicula)
-    print(len(lista_peliculas))
+        print(f"{pelicula.id_pelicula}:{pelicula.titulo_pelicula} ({pelicula.fecha_lanzamiento.year})")
+    #print(sistema.actores)
+    #print(sistema.peliculas)
+    #print(sistema.relaciones)
+    #print(sistema.usuarios)
+    print("---------------------")
     lista_actores = sistema.obtener_actores_por_pelicula(1)
     for actor in lista_actores:
-        print(actor.nombre)
-
+        print(f"{actor.id_estrella}:{actor.nombre} ({actor.fecha_nacimiento.year})")
+    print("---------------------")
     #for u in sistema.usuarios.values():
-    #    u.password = u.hash_string(u.password)
-    #hashed_users = "datos/movies_db - users_hashed.csv"
-    #sistema.guardar_csv(hashed_users, sistema.usuarios)
-    #print(f'Se escribió el archivo {hashed_users}')
-    u = sistema.usuarios['Cristian']
-    print(type(u))
+    #    u.password = u.hash_password(u.password)
+    #archivo_hashed = 'datos/movies_db - users_hashed.csv'
+    #sistema.guardar_csv(archivo_hashed, sistema.usuarios)
+    #print(f"Archivo {archivo_hashed} guardado")
+    #
+    #
+    u = sistema.usuarios['fcirettg']
     print(u.username)
-    print(u.password)
-    print(u.hash_string(u.password))
-    exito = sistema.login('Cristian', '220191')
+    print(u.nombre_completo)
+    exito = sistema.login('fcirettg','12345')
     print(exito)
-    if (exito):
-        print(sistema.usuario_actual.username)
-        sistema.agregar_pelicula('La vida es bella', '1997-12-20', 'https://www.imdb.com/title/tt0118799/mediaviewer/rm4282021376')
+    if exito:
+        #sistema.agregar_usuario('messi10','Lionel Messi','messi@gmail.com','12345')
+        #sistema.guardar_csv(archivo_usuarios, sistema.usuarios)
+        #print(f"Usuario agregado")
         sistema.agregar_relacion(69,36,'Rita')
-        sistema.agregar_usuario('messi','Lionel Messi','messi@gmail.com','12345')
-        sistema.guardar_csv(archivo_peliculas, sistema.peliculas)
         sistema.guardar_csv(archivo_relaciones, sistema.relaciones)
-        sistema.guardar_csv(archivo_usuarios, sistema.usuarios)
-    else:
-        print('Usuario o contraseña incorrectos')
-    print("listo!")
+        print(f"Relación agregada")
+    print("-----------------")
+    pelis = sistema.buscar_peliculas_por_titulo('star')
+    for p in pelis:
+        print(p)
+    print("-----------------")
+    actores = sistema.buscar_actores_por_nombre('ar')
+    for a in actores:
+        print(a)
+    print("-----------------")
+    personajes = sistema.obtener_personajes_por_estrella(4)
+    for p in personajes:
+        print(f"{p['personaje']} - {p['pelicula']}")
+    print("Listo!")
